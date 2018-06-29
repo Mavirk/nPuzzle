@@ -127,21 +127,28 @@ def getDirection(st, direction, puzzle_size):
         return False
     return st
 
-def reconstruct_path(current, puzzle_size):
-    total_path = []
-    total_path.append(current)
-    current = current['parent']
-    print_state(current['state'], puzzle_size)
-    print('cost : '),
-    print(current['cost'])
-    print('heur : '),
-    print(current['heur'])
-    print('totalCost : '),
-    print(current['totalCost'])
-    if current['name'] == 'start' :
+def reconstruct_path(current, puzzle_size, total_path = []):
+    # print_state(current['state'], puzzle_size)
+    # print('cost : '),
+    # print(current['cost'])
+    # print('heur : '),
+    # print(current['heur'])
+    # print('totalCost : '),
+    # print(current['totalCost'])
+    # print current['parent']
+    # print len(total_path)
+    if  current == 'start' :
+        # print 'yes'
+        # current = current['parent']
         total_path.append(current)
         return total_path
-    return reconstruct_path(current['parent'], current, puzzle_size)
+    else:    
+        total_path.append(current)
+        current = current['parent']
+        # print current
+        # print current['parent']
+        # print 'yes'
+        return reconstruct_path(current, puzzle_size)
 
 
 def getNextStates(state,solution, puzzle_size):
@@ -161,9 +168,9 @@ def getNextStates(state,solution, puzzle_size):
     return nextStates            
 def print_states(solution, puzzle_size):
 
-    if solution is dict:
+    if solution is not dict:
         state = solution
-        print_state(state['state'], puzzle_size)
+        print_state(state, puzzle_size)
         print('cost : '),
         print(state['cost'])
         print('heur : '),
@@ -172,7 +179,7 @@ def print_states(solution, puzzle_size):
         print(state['totalCost'])
     else:
         for state in solution:
-            print_state(state['state'], puzzle_size)
+            print_state(state , puzzle_size)
             print('cost : '),
             print(state['cost'])
             print('heur : '),
@@ -184,9 +191,9 @@ def A_Star(start, solution, puzzle_size):
     closedSet = []
     
     openSet = [start]   
-    # tries = 500000000
+    tries = 5
     count = 0
-    while openSet != [] :
+    while openSet != [] and count < tries:
         count += 1
         print('===NODES OPENED===: '),
         print(count),
@@ -215,29 +222,24 @@ def A_Star(start, solution, puzzle_size):
         # print(current['totalCost'])
         # print('==========NEXT_STATES:==========')
         # print_states(nextStates, puzzle_size)
-        
-        for state in solution:
-            print_state(state['state'], puzzle_size)
-                # print('cost : '),
-                # print(state['cost']
-                # print('heur : '),
-                # print(state['heur'])
-                # print('totalCost : '),
-                # print(state['totalCost'])
         if current['parent'] != 0:
             print('==========TRYING_SOLUTION==========:')
-            solution = reconstruct_path(current, puzzle_size)
-        for state in solution:
-            print_state(state['state'], puzzle_size)
-            print('cost : '),
-            print(state['cost'])
-            print('heur : '),
-            print(state['heur'])
-            print('totalCost : '),
-            print(state['totalCost'])
+            finalPath = reconstruct_path(current, puzzle_size)
+            for state in finalPath:
+                if state != 'start':
+                    print_state(state['state'], puzzle_size)
+                    print('cost : '),
+                    print(state['cost'])
+                    print('heur : '),
+                    print(state['heur'])
+                    print('totalCost : '),
+                    print(state['totalCost'])
+                else:
+                    print state
+                    
         if current['heur'] == 0:
             print('==========SOLUTION_FOUND==========:')
-            return reconstruct_path(current['parent'], current, puzzle_size)
+            return reconstruct_path(current, puzzle_size)
         for state in nextStates: 
             if state in closedSet:
                 continue		# Ignore the state which is already evaluated.
@@ -287,9 +289,10 @@ def nPuzzle(file_name):
         print('ERROR: Test file is invalid: no space to move')
         quit()
     solution = generate_solution(puzzle_size)   
+    # print solution
     count = 0
     heuristic = get_heuristic(state, solution)
-    x = {'state': copy.deepcopy(state), 'cost' : count, 'heur': heuristic, 'totalCost' : heuristic + count, 'parent' : 0} 
+    x = {'state': copy.deepcopy(state), 'cost' : count, 'heur': heuristic, 'totalCost' : heuristic + count, 'parent' : 'start'} 
     
     opened = [x]
     closed = []
@@ -297,15 +300,16 @@ def nPuzzle(file_name):
     parents = []
     
     grub = A_Star(x, solution, puzzle_size)
-    # if solution:
-    #     for state in solution:
-    #         print_state(state['state'], puzzle_size)
-    #         print('cost : '),
-    #         print(state['cost']
-    #         print('heur : '),
-    #         print(state['heur'])
-    #         print('totalCost : '),
-    #         print(state['totalCost'])
+    for state in grub:
+        print len(grub)
+        if state != 'start':
+            print_state(state['state'], puzzle_size)
+            print('cost : '),
+            print(state['cost'])
+            print('heur : '),
+            print(state['heur'])
+            print('totalCost : '),
+            print(state['totalCost'])
 
     # while opened != [] and count < tries:
     #     opened.sort(key=itemgetter('totalCost')
