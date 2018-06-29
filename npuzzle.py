@@ -140,7 +140,6 @@ def reconstruct_path(current, puzzle_size, total_path = []):
     if  current == 'start' :
         # print 'yes'
         # current = current['parent']
-        total_path.append(current)
         return total_path
     else:    
         total_path.append(current)
@@ -222,21 +221,21 @@ def A_Star(start, solution, puzzle_size):
         # print(current['totalCost'])
         # print('==========NEXT_STATES:==========')
         # print_states(nextStates, puzzle_size)
-        if current['parent'] != 0:
-            print('==========TRYING_SOLUTION==========:')
-            finalPath = reconstruct_path(current, puzzle_size)
-            for state in finalPath:
-                if state != 'start':
-                    print_state(state['state'], puzzle_size)
-                    print('cost : '),
-                    print(state['cost'])
-                    print('heur : '),
-                    print(state['heur'])
-                    print('totalCost : '),
-                    print(state['totalCost'])
-                else:
-                    print state
-                    
+        # if current['parent'] != 0:
+        print('==========TRYING_SOLUTION==========:')
+        tempPath = reconstruct_path(current, puzzle_size)
+        print 'this is the tempPath'
+        print len(tempPath)
+        for state in tempPath:
+            if state != 'start':
+                print_state(state['state'], puzzle_size)
+                print('cost : '),
+                print(state['cost'])
+                print('heur : '),
+                print(state['heur'])
+                print('totalCost : '),
+                print(state['totalCost'])
+                
         if current['heur'] == 0:
             print('==========SOLUTION_FOUND==========:')
             return reconstruct_path(current, puzzle_size)
@@ -300,16 +299,18 @@ def nPuzzle(file_name):
     parents = []
     
     grub = A_Star(x, solution, puzzle_size)
+    print grub
     for state in grub:
+        print 'this is the grub'
         print len(grub)
-        if state != 'start':
-            print_state(state['state'], puzzle_size)
-            print('cost : '),
-            print(state['cost'])
-            print('heur : '),
-            print(state['heur'])
-            print('totalCost : '),
-            print(state['totalCost'])
+        
+        print_state(state['state'], puzzle_size)
+        print('cost : '),
+        print(state['cost'])
+        print('heur : '),
+        print(state['heur'])
+        print('totalCost : '),
+        print(state['totalCost'])
 
     # while opened != [] and count < tries:
     #     opened.sort(key=itemgetter('totalCost')
