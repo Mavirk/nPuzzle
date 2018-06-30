@@ -3,6 +3,7 @@ import re # allows access to regular expressions
 import pprint # allows pretty printing of objects and lists
 import copy # allows be to pass immutable objects by value by copying them into a new memory location
 import pdb
+from math import sqrt
 from operator import itemgetter
 
 # generalized function that removes comments(denoted by sep) from a string-line
@@ -69,9 +70,10 @@ def check_tile(node):
     if not (node['currX'] == node['goalX'] and node['currY'] == node['goalY']):
         return 1
     return 0
-
+def euclidean_distance(node):
+    return sqrt((node['currX'] - node['goalX']) **2 + (node['currY'] - node['goalY'])**2)
 def manhattan_distance(node):
-    return (node['currX'] - node['goalX']) + (node['currY'] - node['goalY'])
+    return abs(node['currX'] - node['goalX']) + abs(node['currY'] - node['goalY'])
 
 def tiles_out_row_column(node, hCounter):
     if node['currX'] != node['goalX']: 
@@ -85,17 +87,20 @@ def get_heuristic(state, puzzle):
     hCounter = 0
     hFinal = 0
     for node in state:
-        node['goalX'] = puzzle[node['num'] - 1]['x']
-        node['goalY'] = puzzle[node['num'] - 1]['y']
-        if node['heuristic'] == 'man':
-            hFinal = hFinal + abs(manhattan_distance(node))
-        elif node['heuristic'] == 'mis' :
-            hFinal = hFinal + check_tile(node)
-        elif node['heuristic'] == 'row':
-            hFinal = hFinal + tiles_out_row_column(node, hCounter)
-        else:
-            print('ERROR: unknown heuristic: ' + node['heuristic'])
-            quit()
+        if node['num'] != 0:
+            node['goalX'] = puzzle[node['num'] - 1]['x']
+            node['goalY'] = puzzle[node['num'] - 1]['y']
+            if node['heuristic'] == 'man':
+                hFinal = hFinal + manhattan_distance(node)
+            elif node['heuristic'] == 'mis' :
+                hFinal = hFinal + check_tile(node)
+            elif node['heuristic'] == 'euc' :
+                hFinal = hFinal + euclidean_distance(node)    
+            elif node['heuristic'] == 'row':
+                hFinal = hFinal + tiles_out_row_column(node, hCounter)
+            else:
+                print('ERROR: unknown heuristic: ' + node['heuristic'])
+                quit()
     return int(hFinal)
 
 def getDirection(st, direction, puzzle_size):  
@@ -209,28 +214,31 @@ def A_Star(start, solution, puzzle_size):
         if current['heur'] == 0:
             print('==========SOLUTION_FOUND==========:')
             return reconstruct_path(current, puzzle_size)
-        # print count    
+        print count    
         if count == 10000:
             print('==========TRYING_SOlUTION==========:')
             return  reconstruct_path(current, puzzle_size)  
 
         openSet.pop(0)
-        closedSet.append(current)
+        closedSet.append(current['state'])
 
         for state in getNextStates(current,solution,puzzle_size):
             # print count
             # pprint.pprint(state) 
-            if  itemInSet(state,closedSet):
+            if  state['state'] in closedSet:
                 continue		# Ignore if the state which is already closed
 
             if not itemInSet(state,openSet) or current['cost'] + 1 < state['cost']:	# Discover a new node
                 state['parent'] = current
                 state['cost'] = current['cost'] + 1
                 state['totalCost'] = state['cost'] + state['heur']
-                if state not in openSet and state['totalCost'] <= current['totalCost'] + 3:
-                    openSet.append(state)
+                if not itemInSet(state,openSet) and state['totalCost'] <= current['totalCost'] + 2:
+                    openSet.insert(0, state)
+                    if len(openSet) > puzzle_size ** 2 * 100:
+                        openSet.pop(len(openSet) - 1)
+
             
-               
+            
 def nPuzzle(file_name):
     try:
         with open (file_name, 'rt') as in_file: # Opens the file, reads it into the list file_data and closes the file afterwards
