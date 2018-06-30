@@ -126,7 +126,12 @@ def getDirection(st, direction, puzzle_size):
     if count == puzzle_size * puzzle_size:
         return False
     return st
-
+def itemInSet(curr, setOfStates):
+    for item in setOfStates:
+        if item['state'] == curr['state']:
+            return True
+    return False        
+        
 def reconstruct_path(current, puzzle_size, total_path = []):
     # print_state(current['state'], puzzle_size)
     # print('cost : '),
@@ -198,25 +203,27 @@ def A_Star(start, solution, puzzle_size):
     while openSet != [] :
         count += 1
 
-        openSet.sort(key=itemgetter('totalCost'))
+        openSet.sort(key=itemgetter('totalCost', 'heur'))
         current = openSet[0]
 
         if current['heur'] == 0:
             print('==========SOLUTION_FOUND==========:')
             return reconstruct_path(current, puzzle_size)
-        print count    
-        if count == 10:
+        # print count    
+        if count == 10000:
             print('==========TRYING_SOlUTION==========:')
             return  reconstruct_path(current, puzzle_size)  
 
         openSet.pop(0)
         closedSet.append(current)
 
-        for state in getNextStates(current,solution,puzzle_size): 
-            if state in closedSet:
+        for state in getNextStates(current,solution,puzzle_size):
+            # print count
+            # pprint.pprint(state) 
+            if  itemInSet(state,closedSet):
                 continue		# Ignore if the state which is already closed
 
-            if state not in openSet or current['cost'] + 1 < state['cost']:	# Discover a new node
+            if not itemInSet(state,openSet) or current['cost'] + 1 < state['cost']:	# Discover a new node
                 state['parent'] = current
                 state['cost'] = current['cost'] + 1
                 state['totalCost'] = state['cost'] + state['heur']
@@ -280,17 +287,17 @@ def nPuzzle(file_name):
         print(state['heur'])
         print('totalCost : '),
         print(state['totalCost'])
-        print( '====NEXT_STATES====')
-        ns = getNextStates(state, solution, puzzle_size)
+        # print( '====NEXT_STATES====')
+        # ns = getNextStates(state, solution, puzzle_size)
         
-        for state in ns :
-            print_state(state['state'], puzzle_size)
-            print('cost : '),
-            print(i + 1)
-            print('heur : '),
-            print(state['heur'])
-            print('totalCost : '),
-            print(i + 1 + state['heur'])
+        # for state in ns :
+        #     print_state(state['state'], puzzle_size)
+        #     print('cost : '),
+        #     print(i + 1)
+        #     print('heur : '),
+        #     print(state['heur'])
+        #     print('totalCost : '),
+        #     print(i + 1 + state['heur'])
 
          # print '===NODES OPENED===: ',
         # print("\r" + '===NODES_OPENED===' + str(count)),
