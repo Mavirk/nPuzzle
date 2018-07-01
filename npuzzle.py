@@ -64,7 +64,57 @@ def generate_solution(puzzle_size):
         if counter == puzzle_size * puzzle_size :
             puz.append({'num': 0, 'x': x, 'y': y})
             return puz
-     
+def isEven(num):
+    if int(num) % 2 == 0:
+        return True # Even 
+    else:
+        return False            
+def checkInversions(arr, puzzle_size):
+    i = 0
+    j = 2 
+    for i <= puzzle_size:
+        if i == puzzle_size:
+            j = j - 1
+               
+               
+               
+                solved = [1,2,3,8,0,4,7,6,5]
+            unsolvable = [3,6,2,7,0,1,5,8,4] 
+            usolbvable2 = [3,6,2,1,4,8,5,7,0]
+            sss = 0
+            for i in range(len(unsolvable)):
+                sss += unsolvable[i] * (-i**i)
+            print sss
+
+    elif puzzle_size == 4:
+        solved = [1,2,3,4,12,13,14,5,11,0,15,6,10,9,8,7]
+    elif puzzle_size == 5:
+        print "we dont handle 5 x 5 puzzles yet"
+    print arr
+def isSolvable(state, puzzle_size):
+    # pprint.pprint(state)
+    blank = (item for item in state if item['num'] == 0).next()
+    print blank
+    print_state(state, puzzle_size)
+    array = [i['num'] for i in state]
+    if not isEven(puzzle_size) and isEven(checkInversions(array, puzzle_size)):
+        return True
+    elif isEven(puzzle_size):
+        if isEven(blank['currX']) and not isEven(checkInversions(array, puzzle_size)):
+            return True
+        elif not isEven(blank['currX']) and isEven(checkInversions(array, puzzle_size)):
+            return True
+        else:
+            return False    
+    else:        
+        return False
+
+
+def addGoals(state,puzzle):
+    for node in state:
+        node['goalX'] = puzzle[node['num'] - 1]['x']
+        node['goalY'] = puzzle[node['num'] - 1]['y']
+    return state
 
 def check_tile(node):
     if not (node['currX'] == node['goalX'] and node['currY'] == node['goalY']):
@@ -81,19 +131,57 @@ def tiles_out_row_column(node, hCounter):
     if node['currY'] != node['goalY']: 
         hCounter += 1
     return hCounter
-
+def linear_conflict(state):
+    comp1 = [i for i in state]
+    comp2 = [x for x in state]
+    h = 0
+    # pprint.pprint(state)
+    for a in comp1:
+        if a['num'] != 0:
+            # pprint.pprint(a)
+            h = h + manhattan_distance(a)
+            # print 'heur ',
+            # print h
+            for b in comp2:
+                if b['num'] != 0:
+                    # print 'A ',
+                    # print a['num'],
+                    # print ' and  B ',
+                    # print b['num']  
+                    if a['num'] != b['num']:
+                        if a['currX'] == b['currX'] == a['goalX'] == b['goalX'] :
+                            # print a['num'],
+                            # print " ",
+                            # print b['num']
+                            if a['currY'] > b['currY'] and a['goalY'] < b['goalY']:
+                                # print 'X'
+                                h = h + 2 
+                        elif a['currY'] == b['currY'] == a['goalY'] == b['goalY']:
+                            # print a['currY'],
+                            # print '=',
+                            # print b['currY'],
+                            # print '=',
+                            # print a['goalY'],
+                            # print '=',
+                            # print b['goalY']
+                            if a['currX'] > b['currX'] and a['goalX'] < b['goalX']:
+                                # print 'Y'
+                                h = h + 2
+    return h                     
 def get_heuristic(state, puzzle):
     # pprint.pprint(puzzle)
     hCounter = 0
     hFinal = 0
+    
     for node in state:
         if node['num'] != 0:
-            node['goalX'] = puzzle[node['num'] - 1]['x']
-            node['goalY'] = puzzle[node['num'] - 1]['y']
             if node['heuristic'] == 'man':
                 hFinal = hFinal + manhattan_distance(node)
             elif node['heuristic'] == 'mis' :
                 hFinal = hFinal + check_tile(node)
+            elif node['heuristic'] == 'lin' :
+                # pprint.pprint(state)
+                return linear_conflict(state)  
             elif node['heuristic'] == 'euc' :
                 hFinal = hFinal + euclidean_distance(node)    
             elif node['heuristic'] == 'row':
@@ -215,7 +303,7 @@ def A_Star(start, solution, puzzle_size):
             print('==========SOLUTION_FOUND==========:')
             return reconstruct_path(current, puzzle_size)
         print count    
-        if count == 10000:
+        if count == 1000000:
             print('==========TRYING_SOlUTION==========:')
             return  reconstruct_path(current, puzzle_size)  
 
@@ -261,6 +349,7 @@ def nPuzzle(file_name):
         print("ERROR: No heuristic, please rerun with a heuristic.")
         quit()
     found_zero = False
+    solution = generate_solution(puzzle_size)
     for line in inputs:
         y -= 1
         x = -1
@@ -269,32 +358,32 @@ def nPuzzle(file_name):
             if int(num) == 0:
                 found_zero = True
             state.append({'currX': int(x), 'currY': int(y), 'goalX': int(x), 'goalY': int(y), 'heuristic' : sys.argv[2], 'num': int(num)})
+            addGoals(state, solution)
     if found_zero == False:
         print('ERROR: Test file is invalid: no space to move')
         quit()
-    solution = generate_solution(puzzle_size)   
+        
     # print solution
     count = 0
     heuristic = get_heuristic(state, solution)
     x = {'state': copy.deepcopy(state), 'cost' : count, 'heur': heuristic, 'totalCost' : heuristic + count, 'parent' : 'start'} 
     
-    opened = [x]
-    closed = []
-    tries = 4
-    parents = []
-    
-    grub = A_Star(x, solution, puzzle_size)
-    # this for loop is for debugging so we keep a* clean for edits 
-    for i,state in enumerate(reversed(grub)):
-        # print 'this is the grub
-        print '===CURRENT==='
-        print_state(state['state'], puzzle_size)
-        print('cost : '),
-        print(state['cost'])
-        print('heur : '),
-        print(state['heur'])
-        print('totalCost : '),
-        print(state['totalCost'])
+   
+    if isSolvable(x['state'], puzzle_size):
+        grub = A_Star(x, solution, puzzle_size)
+        # this for loop is for debugging so we keep a* clean for edits 
+        for i,state in enumerate(reversed(grub)):
+            # print 'this is the grub
+            print '===CURRENT==='
+            print_state(state['state'], puzzle_size)
+            print('cost : '),
+            print(state['cost'])
+            print('heur : '),
+            print(state['heur'])
+            print('totalCost : '),
+            print(state['totalCost'])
+    else:
+        print "puzzle is unsolvable"
         # print( '====NEXT_STATES====')
         # ns = getNextStates(state, solution, puzzle_size)
         

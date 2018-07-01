@@ -23,13 +23,13 @@ def make_puzzle(s, solvable, iterations):
 	p = make_goal(s)
 	for i in range(iterations):
 		swap_empty(p)
-	
+	print p
 	if not solvable:
 		if p[0] == 0 or p[1] == 0:
 			p[-1], p[-2] = p[-2], p[-1]
 		else:
 			p[0], p[1] = p[1], p[0]
-
+	print p
 	return p
 
 def make_goal(s):
