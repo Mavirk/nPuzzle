@@ -41,68 +41,76 @@ def generate_solution(puzzle_size):
     while max_s >= 1 :
         while x < max_s:
             puz.append({'num': counter, 'x': x, 'y': y})
-            # print('right' + str(max_s) + ' ' + str(counter))
             counter += 1
             x += 1    
         min_s = min_s + 1 
         while y > min_s:
             puz.append({'num': counter, 'x': x, 'y': y})
-            # print('down' + str(max_s) + ' ' + str(counter))
             counter += 1
             y -= 1   
         while x > min_s:
             puz.append({'num': counter, 'x': x, 'y': y})
-            # print('left' + str(max_s) + ' ' + str(counter))
             counter += 1
             x -= 1   
         max_s = max_s - 1
         while y < max_s:
             puz.append({'num': counter, 'x': x, 'y': y})
-            # print('up' + str(max_s) + ' ' + str(counter))
             counter += 1
             y += 1
         if counter == puzzle_size * puzzle_size :
             puz.append({'num': 0, 'x': x, 'y': y})
             return puz
+
 def isEven(num):
     if int(num) % 2 == 0:
         return True # Even 
     else:
-        return False            
-def checkInversions(arr, puzzle_size):
-    i = 0
-    j = 2 
-    for i <= puzzle_size:
-        if i == puzzle_size:
-            j = j - 1
-               
-               
-               
-                solved = [1,2,3,8,0,4,7,6,5]
-            unsolvable = [3,6,2,7,0,1,5,8,4] 
-            usolbvable2 = [3,6,2,1,4,8,5,7,0]
-            sss = 0
-            for i in range(len(unsolvable)):
-                sss += unsolvable[i] * (-i**i)
-            print sss
+        return False
 
+def checkInversions(state, puzzle_size):
+    # TODO make function for these lines of code
+    inv = 0
+    snail3 = [0,1,2,5,8,7,6,3,4]
+    snail4 = [0,1,2,3,7,11,15,14,13,12,8,4,5,6,10,9]
+    snail5 = [0,1,2,3,4,9,14,19,24,23,22,21,20,15,10,5,6,7,8,13,18,17,16,11,12]
+    snail = []
+    if puzzle_size > 4 :
+        print '5 puzzle is not supported'
+        quit()
+    elif puzzle_size == 3:
+        for i in snail3:
+            if state[i]['num'] != 0:
+                snail.append(state[i]['num'])
     elif puzzle_size == 4:
-        solved = [1,2,3,4,12,13,14,5,11,0,15,6,10,9,8,7]
-    elif puzzle_size == 5:
-        print "we dont handle 5 x 5 puzzles yet"
-    print arr
+        for i in snail4:
+            if state[i]['num'] != 0:
+                snail.append(state[i]['num'])
+    
+    for i in range(len(snail)):
+        for j in range(i, len(snail)):
+            if snail[i] > snail[j] and snail[i] != 0 and snail[j] != 0:
+                print snail[i],
+                print ' > ',
+                print snail[j]
+                inv += 1
+    if isEven(inv):
+        print inv
+        print "EVEN"
+    else: 
+        print inv
+        print "ODD"
+    return inv
+
 def isSolvable(state, puzzle_size):
-    # pprint.pprint(state)
     blank = (item for item in state if item['num'] == 0).next()
     print blank
     print_state(state, puzzle_size)
-    array = [i['num'] for i in state]
-    if not isEven(puzzle_size) and isEven(checkInversions(array, puzzle_size)):
+    if not isEven(puzzle_size) and isEven(checkInversions(state, puzzle_size)):
         return True
     elif isEven(puzzle_size):
-        if isEven(blank['currX']) and not isEven(checkInversions(array, puzzle_size)):
+        if isEven(blank['currX'] +  1) and not isEven(checkInversions(state, puzzle_size)):
             return True
-        elif not isEven(blank['currX']) and isEven(checkInversions(array, puzzle_size)):
+        elif not isEven(blank['currX'] + 1) and isEven(checkInversions(state, puzzle_size)):
             return True
         else:
             return False    
@@ -135,41 +143,20 @@ def linear_conflict(state):
     comp1 = [i for i in state]
     comp2 = [x for x in state]
     h = 0
-    # pprint.pprint(state)
     for a in comp1:
         if a['num'] != 0:
-            # pprint.pprint(a)
             h = h + manhattan_distance(a)
-            # print 'heur ',
-            # print h
             for b in comp2:
                 if b['num'] != 0:
-                    # print 'A ',
-                    # print a['num'],
-                    # print ' and  B ',
-                    # print b['num']  
                     if a['num'] != b['num']:
                         if a['currX'] == b['currX'] == a['goalX'] == b['goalX'] :
-                            # print a['num'],
-                            # print " ",
-                            # print b['num']
                             if a['currY'] > b['currY'] and a['goalY'] < b['goalY']:
-                                # print 'X'
                                 h = h + 2 
                         elif a['currY'] == b['currY'] == a['goalY'] == b['goalY']:
-                            # print a['currY'],
-                            # print '=',
-                            # print b['currY'],
-                            # print '=',
-                            # print a['goalY'],
-                            # print '=',
-                            # print b['goalY']
                             if a['currX'] > b['currX'] and a['goalX'] < b['goalX']:
-                                # print 'Y'
                                 h = h + 2
     return h                     
 def get_heuristic(state, puzzle):
-    # pprint.pprint(puzzle)
     hCounter = 0
     hFinal = 0
     
@@ -180,7 +167,6 @@ def get_heuristic(state, puzzle):
             elif node['heuristic'] == 'mis' :
                 hFinal = hFinal + check_tile(node)
             elif node['heuristic'] == 'lin' :
-                # pprint.pprint(state)
                 return linear_conflict(state)  
             elif node['heuristic'] == 'euc' :
                 hFinal = hFinal + euclidean_distance(node)    
@@ -226,29 +212,12 @@ def itemInSet(curr, setOfStates):
     return False        
         
 def reconstruct_path(current, puzzle_size, total_path = []):
-    # print_state(current['state'], puzzle_size)
-    # print('cost : '),
-    # print(current['cost'])
-    # print('heur : '),
-    # print(current['heur'])
-    # print('totalCost : '),
-    # print(current['totalCost'])
-    # print current['parent']
-    # print len(total_path)
-    
-    
     if  current == 'start' :
-        # print 'yes'
-        # current = current['parent']
         return total_path
     else: 
-        # print 'no'
         temp = copy.deepcopy(current)
         total_path.append(temp)
         temp = temp['parent']
-        # print current
-        # print current['parent']
-        # print 'yes'
         return reconstruct_path(temp, puzzle_size, total_path)
 
 
@@ -268,7 +237,6 @@ def getNextStates(state,solution, puzzle_size):
                 })
     return nextStates            
 def print_states(solution, puzzle_size):
-
     if solution is not dict:
         state = solution
         print_state(state, puzzle_size)
@@ -302,7 +270,9 @@ def A_Star(start, solution, puzzle_size):
         if current['heur'] == 0:
             print('==========SOLUTION_FOUND==========:')
             return reconstruct_path(current, puzzle_size)
-        print count    
+        if count % 100 = 0    
+            print count,
+            print " NODES EXPANDED"   
         if count == 1000000:
             print('==========TRYING_SOlUTION==========:')
             return  reconstruct_path(current, puzzle_size)  
@@ -311,8 +281,6 @@ def A_Star(start, solution, puzzle_size):
         closedSet.append(current['state'])
 
         for state in getNextStates(current,solution,puzzle_size):
-            # print count
-            # pprint.pprint(state) 
             if  state['state'] in closedSet:
                 continue		# Ignore if the state which is already closed
 
@@ -384,274 +352,6 @@ def nPuzzle(file_name):
             print(state['totalCost'])
     else:
         print "puzzle is unsolvable"
-        # print( '====NEXT_STATES====')
-        # ns = getNextStates(state, solution, puzzle_size)
-        
-        # for state in ns :
-        #     print_state(state['state'], puzzle_size)
-        #     print('cost : '),
-        #     print(i + 1)
-        #     print('heur : '),
-        #     print(state['heur'])
-        #     print('totalCost : '),
-        #     print(i + 1 + state['heur'])
-
-         # print '===NODES OPENED===: ',
-        # print("\r" + '===NODES_OPENED===' + str(count)),
-        # print '===OPENED===: ',
-        # print '{0}\r'.format(len(openSet)),
-        # print '===CLOSED===: '
-        # print '{0}\r'.format(len(closedSet)),
-
-    # while opened != [] and count < tries:
-    #     opened.sort(key=itemgetter('totalCost')
-    #     print("=====OPENED:")
-    #     for c in opened:
-    #         if c['heur'] == 0:
-    #             print 'dipshit'
-    #             quit()
-    #         print_state(c['state'], puzzle_size)
-    #         print('cost : '),
-    #         print(c['cost'])
-    #         print('heur : '),
-    #         print(c['heur'])
-    #         print('totalCost : '),
-    #         print(c['totalCost'])
-    #     print('')    
-    #     current = opened[0]
-    #     closed.append(current)
-    #     opened.pop(0)
-    #     nextStates = []
-    #     if current['heur'] == 0:
-    #         closed.append(current)
-    #         print('======SOlUTION FOUND :')
-    #         for step in closed:
-    #             print_state(step['state'], puzzle_size)
-    #             print(step['name'])
-    #             print('')
-    #         return True
-    #     print('======CURRENT_STATE : On Step '),
-    #     print(count)
-    #     print_state(current['state'], puzzle_size)
-    #     print('cost : '),
-    #     print(current['cost'])
-    #     print('heur : '),
-    #     print(current['heur'])
-    #     print('totalCost : '),
-    #     print(current['totalCost'])
-    #     count += 1 
-        
-    #     print('')
-    #     print('')        change alt s to save in vs code
-    #     print('======NEXT_STATES : ')        
-    #     for nState in nextStates:
-    #         print_state(nState['state'], puzzle_size)
-    #         print('cost : '),
-    #         print(nState['cost'])
-    #         print('heur : '),
-    #         print(nState['heur'])
-    #         print('totaCost : '),
-    #         print(nState['totalCost'])
-    #         print('')
-    #         if nState in closed:
-    #             continue
-    #         if nState not in opened:
-    #             opened.append(nState)
-    #         temp_cost = current['cost'] + 1
-    #         if temp_cost >= nState['cost']:
-    #             continue
-    #         nState['parent'] = current
-    #         nState['cost'] = temp_cost
-    #         nState['totalCost'] = nState['cost']
-         
-    #     print('======CLOSED : ')
-    #     for k in closed:
-    #         print_state(k['state'], puzzle_size)
-    #         print('cost : '),
-    #         print(k['cost'])
-    #         print('heur : '),
-    #         print(k['heur'])
-    #         print('totaCost : '),
-    #         print(k['totalCost'])
-    #         print('')        
-        
-    # if current['heur'] != 0:
-    #     print('=====NOT_SOLVED')
-                    
-
-
-    #     print('==================')
-    #     print('opened[0]')
-    #     for x in opened:
-    #         print_state(x['state'], puzzle_size)
-    #         print(x['totalCost'])
-
-    #     current = opened[0]
-    #     if current in lastStates:
-    #         opened.pop(0)
-       
-    #     # print('')
-    #     # pprint.pprint(opened[0])
-        
-    #     if current['heur'] == 0:
-    #         closed.append(current)
-    #         print('SOlUTION FOUND :')
-    #         for step in closed:
-    #             # print(step['name'])
-    #             print_state(step['state'], puzzle_size)
-    #         return True
-    #     print('CURRENT_STATE : On Step '),
-    #     print(current['name'])
-    #     print(current['totalCost'])
-    #     print_state(current['state'], puzzle_size)
-    #     # pprint.pprint(current)
-    #     #get next states as full diciotnaries
-    #     nextStates = []
-    #     for strn in state_strns:
-        
-    #         direction = getDirection(copy.deepcopy(current['state']), strn, puzzle_size)
-    #         if direction : 
-    #             # print(strn)
-    #             # print_state(direction, puzzle_size)
-    #             heuristic = get_heuristic(direction, solution)
-    #             nextStates.append({'name': count, 'state': direction, 'heur': heuristic, 'totalCost' : heuristic + count})
-      
-    #     print('NEXT_STATES : ')
-    #     for state in nextStates:
-    #         if (state not in closed) and (state not in opened):
-    #             opened.append(state)
-    #             print(state['totalCost'])
-    #             print_state(state['state'], puzzle_size)
-    #     lastStates = nextStates        
-    #     closed.append(current)
-    
-    #         # pprint.pprint(nextStates)
-    #     # print('Extending Opened............')
-    #     # pprint.pprint(opened)
-       
-    #     # pprint.pprint(opened)
-    #     # print('OPENED : ')
-    #     # for k in opened:
-    #     #     print(k['name'])
-    #     #     print(k['heur'])
-    #     #     print_state(k['state'], puzzle_size)
-        
-    #     opened.sort(key=itemgetter('totalCost'))
-    #     # print('OPENED : ')
-    #     # for k in opened:
-    #     #     print(k['name'])
-    #     #     print(k['heur'])
-    #     #     print_state(k['state'], puzzle_size)
-            
-        
-    #     # print('CLOSED : ')
-    #     # for k in closed:
-    #     #     print(k['name'])
-    #     #     print(k['heur'])
-    #     #     print_state(k['state'], puzzle_size)
-        
-        
-    #     count += 1    
-
 if len(sys.argv) > 1:
-        nPuzzle(sys.argv[1])
+    nPuzzle(sys.argv[1])
 
-
-
-
-
-
-    # up = getDirection(x['state'], 'up', puzzle_size)
-    # down =  getDirection(x['state'], 'down', puzzle_size)
-    # right = getDirection(x['state'], 'right', puzzle_size)
-    # left = getDirection(x['state'], 'left', puzzle_size) 
-
-            # print('down')
-            # print_state(down, puzzle_size)
-            # # pprint.pprint(down)
-
-            # print('up')
-            # print_state(up, puzzle_size)
-            # # pprint.pprint(up)
-
-            # print('right')
-            # print_state(right, puzzle_size)
-            # # pprint.pprint(right)
-
-            # print('left')
-            # print_state(left, puzzle_size)
-            # # pprint.pprint(left)
-
-        # {'state': up, 'heur': get_heuristic(up, solution)},
-        # {'state': down, 'heur': get_heuristic(down, solution)},
-        # {'state': right, 'heur': get_heuristic(right, solution)},
-        # {'state': left, 'heur': get_heuristic(left, solution)}
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # next_states = {'up': up, 'down': down, 'right': right, 'left': left}
-    # next_states = {key:value for key, value in next_states.iteritems() if value}
-    # next_state_heuristic = {key: count + get_heuristic(value, puzzle) for key, value in next_states.iteritems()}
-    # for key, value in next_states.iteritems(): 
-    #     print(key)
-    #     print(value)
-    # for key, value in next_state_heuristic.iteritems(): 
-    #     print(str(key) + ': ' +  str(value))
-    # sorted_d = sorted(next_state_heuristic.items(), key=lambda (k,v): v)  
-    # print(sorted_d)  
-    # # for key, value in sorted_d.iteritems(): 
-    #     print(str(key) + ': ' +  str(value))
-    # for i in next_states:
-    #     next_state_heuristic.append(get_heuristic(i, puzzle) + abs(get_heuristic(i, puzzle) - get_heuristic(state, puzzle)))
-    # for i in next_state_heuristic: print(i)
-    # for key, value in all_states.iteritems():
-    #     if value != False:
-    #         next_state[key] = value
-    # state = sorted(state, key=lambda k: k['num']) 
-    # print_state(state, puzzle_size)
-    # insert_heuristic( state, puzzle)
-    # print('=======')       
-    # try:
-    #     insert_heuristic(state)
-    # except:
-    #     print 'Failed running robs function on file: ' + file_name
-
-    # print('CURRENT')
-    # print_state(state, puzzle_size)
-    # insert_heuristic( state, puzzle)
-    # print('=======')     
-    
-    # print('UP')
-    # up = getDirection(copy.deepcopy(state), 'up')
-    # print_state(up, puzzle_size)
-    # insert_heuristic( up, puzzle)
-    # print('=======')
-
-    # print('DOWN')
-    # down = getDirection(copy.deepcopy(state), 'down')
-    # print_state(down, puzzle_size)
-    # insert_heuristic(down, puzzle)
-    # print('=======')
-
-    # print('RIGHT')        
-    # right = getDirection(copy.deepcopy(state), 'right')
-    # print_state(right, puzzle_size)
-    # insert_heuristic(right, puzzle)
-    # print('=======')
-    
-    # print('LEFT')
-    # left = getDirection(copy.deepcopy(state), 'left')
-    # print_state(left, puzzle_size)
-    # insert_heuristic(left, puzzle)
-    # print('=======')    
